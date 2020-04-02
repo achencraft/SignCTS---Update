@@ -21,30 +21,29 @@ PASSWORD = "INSERT_HERE"
 
 
 def signCts():
-    print("fct")
+    print("mise a jour")
     #get list of stops to query
     sql = SQL(HOSTNAME, PORT, DB_NAME, USERNAME, PASSWORD)
     StopList = sql.getStopList()
 
 
-    req = Request(TOKEN)
-    AllData = []
-
+    
+    
     #get data from webservice
-    for stop in StopList:
-        retour = [stop]
-        req.show_next(stop)
-        retour.append(req.show_next(stop))
-        AllData.append(retour)
+    req = Request(TOKEN)
+    retour = req.show_next(StopList)
+
+    
 
 
     #insert datas to database
-
     ArgumentsQuery = []
 
     date_actuelle = datetime.datetime.now()
 
-    for stop in AllData:
+    for stop in retour:
+      
+
         idsae = stop[0]
         passages = stop[1]
         nbr_passage = len(passages)
@@ -69,7 +68,9 @@ def signCts():
 
 
 
-schedule.every(0.2).minutes.do(signCts)
+signCts()
+
+schedule.every(0.5).minutes.do(signCts)
 
 while 1:
     schedule.run_pending()

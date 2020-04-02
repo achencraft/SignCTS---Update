@@ -11,16 +11,29 @@ class Request:
   
 
 
-    def show_next(self,station):
-        request = "https://api.cts-strasbourg.eu/v1/siri/2.0/stop-monitoring?MaximumStopVisits=3&MinimumStopVisitsPerLine=1&MonitoringRef="
-        request += station
+    def show_next(self,StopsList):
+        request = "https://api.cts-strasbourg.eu/v1/siri/2.0/stop-monitoring?MaximumStopVisits=3&MinimumStopVisitsPerLine=1"
+        rep = []
+        index = []
+
+        for stop in StopsList:
+            request += "&MonitoringRef=" + stop
+            rep.append([stop,[]])
+            index.append(stop)
+
+
         query = self.session.get(request)
         ans = json.loads(query.text)
-        rep = []
+
+
+    
+        
+
         
         if(ans["ServiceDelivery"]["StopMonitoringDelivery"][0]['MonitoringRef'] != None):
         
             for passage in ans["ServiceDelivery"]["StopMonitoringDelivery"][0]['MonitoredStopVisit']:
+                IDSAE = passage['MonitoringRef']
                 line = passage['MonitoredVehicleJourney']['PublishedLineName']
                 destination = passage['MonitoredVehicleJourney']['DestinationName']
                 heure_passage = passage['MonitoredVehicleJourney']['MonitoredCall']['ExpectedDepartureTime']
@@ -29,22 +42,15 @@ class Request:
                 diff = temps - now
                 temps_attente = str(diff.seconds//60)
 
-                rep.append([line,destination,temps_attente])
+                index_stop = index.index(IDSAE)
+
+                if(len(rep[index_stop][1]) < 3):
+                    rep[index_stop][1].append([line,destination,temps_attente])
         
   
 
+        return rep
         
-        return rep[:3]
-        
-
-    def show_station_list(self):
-        query = self.session.get("https://api.cts-strasbourg.eu/v1/siri/2.0/stoppoints-discovery")
-        ans = json.loads(query.text)
-        nbr_arret = len(ans["StopPointsDelivery"]["AnnotatedStopPointRef"])
-        
-        msg = ""
-        for i in range (0,nbr_arret):
-            msg += ans["StopPointsDelivery"]["AnnotatedStopPointRef"][i]["StopName"] + "\n"
 
     
 def Time_convert(temps):
